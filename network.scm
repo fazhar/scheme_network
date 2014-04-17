@@ -11,6 +11,8 @@
 
 ;Utility functions
 
+(define (caddr l) (car (cdr (cdr l))))
+
 (define (insert-sorted lst item comp-less-than)
     (if (null? lst) (list item)
         (if (comp-less-than item (car lst)) 
@@ -70,6 +72,43 @@
             (game (sorted-insert (black-pieces current-game) position) (white-pieces current-game))
             (game (black-pieces current-game) (insert-sorted (white-pieces current-game) position)))))
 
-    
+
+;Guide for checking directions the pieces last went in
+(define LEFT 0)
+(define UP-LEFT 1)
+(define UP 2)
+(define UP-RIGHT 3)
+(define RIGHT 4)
+(define RIGHT-DOWN 5)
+(define DOWN 6)
+(define DOWN-LEFT 7)
+
 ;Finding Networks and determining if a player has won.
+(define (find-network player goal-area fulladjlist)
+    (if (null? goal-area) (nil) 
+    (let (network (depth-first-search player (car goal-area) (find-adjlist (car goal-area) fulladjlist) fulladjlist)
+    (if (null? network)
+        (find-network player (cdr goal-area) fulladjlist)
+        (network)))))
+
+(define (depth-first-search player start))
+
+;Helper method for dfs
+(define (dfs player start vertices fulladjlist visited direction length-so-far)
+)
+
+;Helper method for dfs. Finds correct adjacency list.
+(define (find-adjlist pos fulladjlist)
+    (if (position=? pos (car (car fulladjlist)))
+        (car fulladjlist)
+        (find-adjlist pos (cdr fulladjlist))))
+
+;Method that checks the direction from pos1 to pos2
+(define (get-dir pos1 pos2)
+    (cond ()))
+
+
+
+
+
 
