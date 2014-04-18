@@ -19,3 +19,7 @@
 					(list (position 7 3) (position 5 1) (position 5 5))))
 
 (display (depth-first-search WHITE (position 0 1) graph nil NO-DIRECTION 0))
+
+
+;Test filter
+;(display (filter (list 1 5 6 4 2 5) (lambda (x) (< 4 x))))

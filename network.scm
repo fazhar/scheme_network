@@ -23,6 +23,13 @@
     (if (null? lst)
         #f
         (or (= 0 (comp item (car lst))) (contains? (cdr lst) item comp))))
+
+;Filter function
+(define (filter lst comp-function)
+    (if (null? lst) lst
+        (if (comp-function (car lst)) 
+            (cons (car lst) (filter (cdr lst) comp-function))
+            (filter (cdr lst) comp-function))))
     
 ;NOTE, this function is inclusive
 (define (in-range? x range comp)
@@ -98,24 +105,24 @@
         (find-network player (cdr goal-area) fulladjlist)
         (network))))))
 
+;Construct graph
+(define (construct-graph pieces)
+    nil)
+
 (define (depth-first-search player vertex graph visited direction length-so-far)
-    (if (< length-so-far 6) nil
-        (if (= player BLACK) 
-            (if (in-range? '(0 0) (y-coor vertex)) nil
-                (if (in-range? '(7 7) (y-coor vertex))) visited
-                nil)
-            (if (in-range? '(0 0) (x-coor vertex)) nil
-                (if (in-range? '(7 7) (x-coor vertex))) visited
-                nil)))
-    (define vertices (find-adjlist vertex graph))
-    (define (dfs-helper network next) 
-        (if (not (null? network))
-            network
-            (let ((dir (get-dir vertex next)))
-                (if (= dir direction) nil
-                    (if (contains? visited next position=?) nil
-                        (depth-first-search player next graph (cons vertex visited) dir (+ length-so-far 1)))))))
-    (reduce dfs-helper (cons nil vertices)))
+    (if (>= length-so-far 5)
+        (if (= player BLACK) (if (= 0 (y-coor vertex)) nil (if (= 7 (y-coor vertex)) (cons vertex visited) nil))
+                             (if (= 0 (x-coor vertex)) nil (if (= 7 (x-coor vertex)) (cons vertex visited) nil)))
+        (begin 
+            (define vertices (filter (cdr (find-adjlist vertex graph)) (lambda (x) (not (contains? visited x comp-positions)))))
+            (define (dfs-helper network next) 
+                (if (not (null? network))
+                    network
+                    (let ((dir (get-dir vertex next)))
+                        (if (= dir direction) nil
+                            (if (contains? visited next comp-positions) nil
+                                (depth-first-search player next graph (cons vertex visited) dir (+ length-so-far 1)))))))
+            (reduce dfs-helper (cons nil vertices)))))
 
 ;Helper method for dfs. Finds correct adjacency list.
 (define (find-adjlist pos fulladjlist)
@@ -125,16 +132,15 @@
 
 ;Method that checks the direction from pos1 to pos2
 (define (get-dir pos1 pos2)
-    (if (= (comp-positions pos1 pos2) 0) NO-DIRECTION)
-    (if (= (delta-x pos1 pos2) 0) 
-        (if (< 0 (delta-y pos1 pos2)) DOWN)
-        UP)
-    (if (= (delta-y pos1 pos2) 0) 
-        (if (< 0 (delta-x pos1 pos2)) LEFT)
-        RIGHT)
-    (if (= (delta-x pos1 pos2) (delta-y pos1 pos2)) 
-        (if (< 0 (delta-y pos1 pos2)) UP-LEFT)
-        DOWN-RIGHT)
-    (if (= (delta-x pos1 pos2) (- 0 (delta-y pos1 pos2)))
-        (if (< 0 (delta-y pos1 pos2)) UP-RIGHT)
-        DOWN-LEFT))
+    (cond ((= (comp-positions pos1 pos2) 0) NO-DIRECTION)
+          ((= (delta-x pos1 pos2) 0) 
+            (if (< 0 (delta-y pos1 pos2)) DOWN) UP)
+          ((= (delta-y pos1 pos2) 0) 
+            (if (< 0 (delta-x pos1 pos2)) LEFT) RIGHT)
+          ((= (delta-x pos1 pos2) (delta-y pos1 pos2)) 
+            (if (< 0 (delta-y pos1 pos2)) UP-LEFT) DOWN-RIGHT)
+          ((= (delta-x pos1 pos2) (- 0 (delta-y pos1 pos2)))
+            (if (< 0 (delta-y pos1 pos2)) UP-RIGHT) DOWN-LEFT)))
+
+
+
