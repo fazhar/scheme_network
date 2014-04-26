@@ -9,7 +9,7 @@
 (define WHITE 1)
 (define NONE -1)
 
-;Utility functions
+;-----------------------------UTILITY-FUNCTIONS----------------------------;
 
 (define (caddr l) (car (cdr (cdr l))))
 
@@ -35,6 +35,10 @@
 (define (in-range? x range comp)
     (and (<= (comp (car range) x) 0)(>= (comp (cadr range) x) 0)))
 
+;--------------------------------------------------------------------------;
+
+
+;---------------------------------POSITION---------------------------------;
 
 ;Position is a list where the first item is the x-coordinate, and the second is the y coordinate
 (define (position x y)
@@ -54,6 +58,39 @@
 
 (define (neighbors? p1 p2)
     (and (>= 1 (abs (delta-x p1 p2)))(>= 1 (abs (delta-y p1 p2)))))
+
+;Checks is a piece is closer than a another piece in the same direction
+(define (is-closer? pos1 pos2 direction) 
+    (cond   ((= direction NO-DIRECTION) #f)
+            ((= direction LEFT) )
+            ((= direction UP-LEFT))
+            ((= direction UP))
+            ((= direction UP-RIGHT))
+            ((= direction RIGHT))
+            ((= direction DOWN-RIGHT))
+            ((= direction DOWN))
+            ((= direction DOWN-LEFT)))
+
+;Function that checks if a position is in another positions place.
+(define (in-lin-of-sight? pos1 pos2 opposite-pieces)
+    nil)
+
+;Function that checks the direction from pos1 to pos2
+(define (get-dir pos1 pos2)
+    (cond ((= (comp-positions pos1 pos2) 0) NO-DIRECTION)
+          ((= (delta-x pos1 pos2) 0) 
+            (if (< 0 (delta-y pos1 pos2)) DOWN) UP)
+          ((= (delta-y pos1 pos2) 0) 
+            (if (< 0 (delta-x pos1 pos2)) LEFT) RIGHT)
+          ((= (delta-x pos1 pos2) (delta-y pos1 pos2)) 
+            (if (< 0 (delta-y pos1 pos2)) UP-LEFT) DOWN-RIGHT)
+          ((= (delta-x pos1 pos2) (- 0 (delta-y pos1 pos2)))
+            (if (< 0 (delta-y pos1 pos2)) UP-RIGHT) DOWN-LEFT)
+          (else NO-DIRECTION)))
+
+;--------------------------------------------------------------------------;
+
+;------------------------------DIRECTED-PIECE------------------------------;
 
 ;list of null-spaces
 (define null-space (list (position 0 0) (position 0 7) (position 7 0) (position 7 7)))
@@ -132,6 +169,20 @@
 (define DOWN-LEFT 7)
 (define NO-DIRECTION 8)
 
+;A has-won method for AI
+(define (has-Won? player game)
+   (let winner 
+        (if (= player BLACK) (find-network player (get-goal-pieces player (black-pieces game)) 
+                                (construct-graph (black-pieces game) (white-pieces game))))
+                             (find-network player (get-goal-pieces player (white-pieces game))
+                                (construct-graph (white-pieces game) (black-pieces game))))
+   (if (null? winner) #f #t))
+
+;Finding pieces if first goal area
+(define (get-goal-pieces player pieces)
+    (if (= BLACK player) (filter pieces (lambda (pieces) (= (y-coor piece) 0)))
+                         (filter pieces (lambda (pieces) (= (x-coor piece) 0)))))
+
 ;Finding Networks and determining if a player has won.
 (define (find-network player goal-area fulladjlist)
     (if (null? goal-area) (nil) 
@@ -140,9 +191,36 @@
         (find-network player (cdr goal-area) fulladjlist)
         (network))))))
 
-;Construct graph
-(define (construct-graph pieces)
-    nil)
+;Function thats takes a list of pieces and returns a graph represents the pieces of the specified player
+(define (construct-graph pieces opposite-pieces)
+    (map (lambda (piece) (find-edges piece pieces opposite-pieces nil) pieces))
+
+;Helper function for construct-graph 
+(define (find-edges piece pieces opposite-pieces with-direction) 
+    (if (null? pieces) 
+        (check-blocks piece with-direction opposite-pieces)
+        (let (direction (in-lin-of-sight? piece (car pieces) opposite-pieces) 
+            (if (not (= direction NO-DIRECTION)) (find-edges piece (cdr pieces) opposite-pieces 
+                                                    (insert-sorted (directed-piece direction piece) with-direction))
+                                                 (find-edges piece (cdr pieces) opposite-pieces with-direction))))))
+
+
+;DIRECTED PIECE
+
+;A new piece thats has a direction
+(define (directed-piece direction piece) (cons direction piece))
+
+;Compares two directions
+(define (comp-directed-piece p1 p2) 
+    (cond ((= (direction p1) (direction p2)) 0)
+          ((< (direction p1) (direction p2)) -1)
+          (else 1)))
+
+;Gives the direction of the directed-piece
+(define (direction directed-piece) (car directed-piece)) 
+
+;Checks to see is one piece blocks another in the same direction
+(define check-blocks)
 
 (define (depth-first-search player vertex graph visited direction length-so-far)
     (if (>= length-so-far 5)
@@ -159,21 +237,9 @@
                                 (depth-first-search player next graph (cons vertex visited) dir (+ length-so-far 1)))))))
             (reduce dfs-helper (cons nil vertices)))))
 
-;Helper method for dfs. Finds correct adjacency list.
+;Helper function for dfs. Finds correct adjacency list.
 (define (find-adjlist pos fulladjlist)
     (if (= (comp-positions pos (car (car fulladjlist))) 0)
         (car fulladjlist)
         (find-adjlist pos (cdr fulladjlist))))
-
-;Method that checks the direction from pos1 to pos2
-(define (get-dir pos1 pos2)
-    (cond ((= (comp-positions pos1 pos2) 0) NO-DIRECTION)
-          ((= (delta-x pos1 pos2) 0) 
-            (if (< 0 (delta-y pos1 pos2)) DOWN) UP)
-          ((= (delta-y pos1 pos2) 0) 
-            (if (< 0 (delta-x pos1 pos2)) LEFT) RIGHT)
-          ((= (delta-x pos1 pos2) (delta-y pos1 pos2)) 
-            (if (< 0 (delta-y pos1 pos2)) UP-LEFT) DOWN-RIGHT)
-          ((= (delta-x pos1 pos2) (- 0 (delta-y pos1 pos2)))
-            (if (< 0 (delta-y pos1 pos2)) UP-RIGHT) DOWN-LEFT)))
 
