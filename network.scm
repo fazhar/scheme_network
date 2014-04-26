@@ -57,7 +57,12 @@
     (- (y-coor p2) (y-coor p1)))
 
 (define (neighbors? p1 p2)
-    (and (>= 1 (abs (delta-x p1 p2)))(>= 1 (abs (delta-y p1 p2)))))
+    (and (not (= 0 (comp-positions p1 p2)))(and (>= 1 (abs (delta-x p1 p2)))(>= 1 (abs (delta-y p1 p2))))))
+
+(define (is-start-goal-piece? position color)
+    (if (= color BLACK)
+        (= 0 (y-coor position))
+        (= 0 (x-coor position))))
 
 ;Checks is a piece is closer than a another piece in the same direction
 (define (is-closer? pos1 pos2 direction) 
@@ -114,6 +119,8 @@
                 (position 0 (+ 1 (y-coor start))))))))
 
 (define (print-game game1)
+    (if (null? game1) 
+    "Invalid board"
     (let ((whites (white-pieces game1))(blacks (black-pieces game1)))
     (reduce string-append (game-map 
         (lambda (tile)
@@ -124,7 +131,7 @@
                 ((contains? whites tile comp-positions) "W ")
                 ((contains? blacks tile comp-positions) "B ")
                 (else  "+ "))
-            (if (= 7 (x-coor tile)) "\n" "")))) (position 0 0)))))
+            (if (= 7 (x-coor tile)) "\n" "")))) (position 0 0))))))
     
 
 ;Returns whether position is a valid move for color. 
@@ -139,8 +146,16 @@
                 (and (and (in-range? x (list 0 7) comp)(in-range? y (list 1 6) comp))(is-valid-helper? whites position)))))))
 
 ;Helper for the is-valid? function
-(define (is-valid-helper? mypieces position)  
-        (>= 1 (reduce + (map (lambda (p) (if (neighbors? position p) 1 0)) mypieces))))
+(define  (is-valid-helper? pieces position)
+    (> 2 (reduce 
+        (lambda (current-count piece)
+            (if (<= 2 current-count)
+                current-count
+                (+ current-count (if (neighbors? position piece) (+ 1 (count-neighbors (remove piece pieces) piece)) 0))))  
+        (cons 0 pieces))))
+
+(define (count-neighbors pieces position)  
+    (reduce + (map (lambda (piece) (if (neighbors? piece position) 1 0)) pieces)))
 
 ;Return a new game board with the step or add move if the move is valid. Otherwise, return nil.
 (define (make-add-move current-game color position)
@@ -157,6 +172,9 @@
             (make-add-move (game (remove position-from blacks) whites) BLACK position-to)
             (make-add-move (game blacks (remove position-from whites)) WHITE position-to)))
         nil))
+
+(define (get-valid-positions current-game color)
+    (filter (game-map (lambda (position) (if (is-valid? position color current-game) position nil)) (position 0 0))(lambda (x) (not (null? x)))))
 
 ;Guide for checking directions the pieces last went in
 (define LEFT 0)
