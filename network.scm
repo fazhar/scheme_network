@@ -1,30 +1,42 @@
 ;An implementation of the game Network in Scheme.
 ;
+
+;-----------------------------CONSTANTS------------------------------------;
 ;Integers used to describe players:
-;
-;   0 - Player with black pieces
-;   1 - Player with white pieces
-;   -1 - No player
 (define BLACK 0)
 (define WHITE 1)
 (define NONE -1)
 
+;Guide for checking directions
+(define LEFT 0)
+(define UP-LEFT 1)
+(define UP 2)
+(define UP-RIGHT 3)
+(define RIGHT 4)
+(define DOWN-RIGHT 5)
+(define DOWN 6)
+(define DOWN-LEFT 7)
+(define NO-DIRECTION 8)
+;--------------------------------------------------------------------------;
+
+
+
+
+
 ;-----------------------------UTILITY-FUNCTIONS----------------------------;
 
 (define (caddr l) (car (cdr (cdr l))))
-
-(define (insert-sorted lst item comp-less-than)
-    (if (null? lst) (list item)
-        (if (> 0 (comp (car lst))) 
-            (cons item lst)
-            (cons (car lst) (insert-sorted (cdr lst) item comp)))))
 
 (define (contains? lst item comp)
     (if (null? lst)
         #f
         (or (= 0 (comp item (car lst))) (contains? (cdr lst) item comp))))
 
-;Filter function
+(define (find lst item comp)
+    (if (null? lst) nil
+        (if (= 0 (comp item (car lst))) (car lst)
+            (contains? (cdr lst) item comp))))
+
 (define (filter lst comp-function)
     (if (null? lst) lst
         (if (comp-function (car lst)) 
@@ -36,6 +48,9 @@
     (and (<= (comp (car range) x) 0)(>= (comp (cadr range) x) 0)))
 
 ;--------------------------------------------------------------------------;
+
+
+
 
 
 ;---------------------------------POSITION---------------------------------;
@@ -64,38 +79,83 @@
         (= 0 (y-coor position))
         (= 0 (x-coor position))))
 
-;Checks is a piece is closer than a another piece in the same direction
-(define (is-closer? pos1 pos2 direction) 
-    (cond   ((= direction NO-DIRECTION) #f)
-            ((= direction LEFT) )
-            ((= direction UP-LEFT))
-            ((= direction UP))
-            ((= direction UP-RIGHT))
-            ((= direction RIGHT))
-            ((= direction DOWN-RIGHT))
-            ((= direction DOWN))
-            ((= direction DOWN-LEFT)))
-
-;Function that checks if a position is in another positions place.
-(define (in-lin-of-sight? pos1 pos2 opposite-pieces)
-    nil)
+;Finds the distance between between two positions
+(define (distance p1 p2) (+ (abs (delta-x p1 p2)) (abs (delta-y p1 p2))))
 
 ;Function that checks the direction from pos1 to pos2
 (define (get-dir pos1 pos2)
     (cond ((= (comp-positions pos1 pos2) 0) NO-DIRECTION)
           ((= (delta-x pos1 pos2) 0) 
-            (if (< 0 (delta-y pos1 pos2)) DOWN) UP)
+            (if (< 0 (delta-y pos1 pos2)) DOWN UP))
           ((= (delta-y pos1 pos2) 0) 
-            (if (< 0 (delta-x pos1 pos2)) LEFT) RIGHT)
+            (if (< 0 (delta-x pos1 pos2)) RIGHT LEFT))
           ((= (delta-x pos1 pos2) (delta-y pos1 pos2)) 
-            (if (< 0 (delta-y pos1 pos2)) UP-LEFT) DOWN-RIGHT)
+            (if (< 0 (delta-y pos1 pos2)) DOWN-RIGHT UP-LEFT))
           ((= (delta-x pos1 pos2) (- 0 (delta-y pos1 pos2)))
-            (if (< 0 (delta-y pos1 pos2)) UP-RIGHT) DOWN-LEFT)
+            (if (< 0 (delta-y pos1 pos2)) DOWN-LEFT UP-RIGHT))
           (else NO-DIRECTION)))
 
 ;--------------------------------------------------------------------------;
 
-;------------------------------DIRECTED-PIECE------------------------------;
+
+
+
+
+;-----------------------------DIRECTED-POSITION----------------------------;
+;A new piece thats has a direction
+(define (dir-pos dir p) (cons dir p))
+
+;Gets the direction of a directed position
+(define (direction pos) (car pos))
+
+(define (get-position pos) (cdr pos))
+
+;Compares two directions
+(define (comp-dir-pos p1 p2) 
+    (cond ((= (direction p1) (direction p2)) 0)
+          ((< (direction p1) (direction p2)) -1)
+          (else 1)))
+
+;Gets the closer of p1 and p2.
+(define (get-closer pos p1 p2)
+    (if (< (distance pos (get-position p1)) (distance pos (get-position p2))) p1 p2))
+
+;Insert the item into the list in its correct sorted position. 
+;If it equals another item use replace to determine if the item should be replaced.
+(define (insert-sorted lst item comp replace?)
+    (if (null? lst) (list item)
+        (cond ((= 0 (comp item (car lst))) 
+                (cons (replace? item (car lst)) (cdr lst)))
+              ((> 0 (comp item (car lst))) 
+                (cons item lst))
+              (else (cons (car lst) (insert-sorted (cdr lst) item comp replace?))))))
+
+;Checks to see is one piece blocks another in the same direction
+(define (check-blocks pos pos-lst other-pos-lst)
+    (if (null? pos-lst) pos-lst
+        (cond ((< (comp-dir-pos (car pos-lst) (car other-pos-lst)) 0)
+                (cons (get-position (car pos-lst)) (check-blocks pos (cdr pos-lst) other-pos-lst)))
+              ((> (comp-dir-pos (car pos-lst) (car other-pos-lst)) 0)
+                (check-blocks pos pos-lst (cdr other-pos-lst)))
+              ((= (comp-dir-pos (car pos-lst) (car other-pos-lst)) 0)
+                (let ((temp-pos (get-position (get-closer pos (car pos-lst) (car other-pos-lst)))))
+                    (if (= (comp-positions temp-pos (get-position (car other-pos-lst))) 0)
+                        (check-blocks pos (cdr pos-lst) (cdr other-pos-lst))
+                        (cons (get-position (car pos-lst)) (check-blocks pos (cdr pos-lst) (cdr other-pos-lst)))))))))
+
+(define (build-dir-lst pos pos-lst new-lst)
+    (if (null? pos-lst)
+        new-lst
+        (build-dir-lst pos (cdr pos-lst) (insert-sorted new-lst (dir-pos (get-dir pos (car pos-lst)) (car pos-lst)) comp-dir-pos (lambda (p1 p2) (get-closer pos p1 p2))))))
+;--------------------------------------------------------------------------;
+
+
+
+
+
+;-----------------------------------GAME-----------------------------------;
+
+
 
 ;list of null-spaces
 (define null-space (list (position 0 0) (position 0 7) (position 7 0) (position 7 7)))
@@ -136,8 +196,8 @@
 
 ;Returns whether position is a valid move for color. 
 
-(define (is-valid? position color game)
-    (let ((blacks (black-pieces game))(whites (white-pieces game)))
+(define (is-valid? position color game1)
+    (let ((blacks (black-pieces game1)) (whites (white-pieces game1)))
         (and
             (not (or (contains? blacks position comp-positions) (contains? whites position comp-positions)))
             (let ((x (x-coor position))(y (y-coor position))(comp (lambda (x y) (- x y))))
@@ -176,18 +236,12 @@
 (define (get-valid-positions current-game color)
     (filter (game-map (lambda (position) (if (is-valid? position color current-game) position nil)) (position 0 0))(lambda (x) (not (null? x)))))
 
-;Guide for checking directions the pieces last went in
-(define LEFT 0)
-(define UP-LEFT 1)
-(define UP 2)
-(define UP-RIGHT 3)
-(define RIGHT 4)
-(define DOWN-RIGHT 5)
-(define DOWN 6)
-(define DOWN-LEFT 7)
-(define NO-DIRECTION 8)
+;Finding pieces if first goal area
+(define (get-goal-pieces player pieces)
+    (if (= BLACK player) (filter pieces (lambda (piece) (= (y-coor piece) 0)))
+                         (filter pieces (lambda (piece) (= (x-coor piece) 0)))))
 
-;A has-won method for AI
+;A method for AI to check if a player has won
 (define (has-Won? player game)
    (let winner 
         (if (= player BLACK) (find-network player (get-goal-pieces player (black-pieces game)) 
@@ -196,49 +250,21 @@
                                 (construct-graph (white-pieces game) (black-pieces game))))
    (if (null? winner) #f #t))
 
-;Finding pieces if first goal area
-(define (get-goal-pieces player pieces)
-    (if (= BLACK player) (filter pieces (lambda (pieces) (= (y-coor piece) 0)))
-                         (filter pieces (lambda (pieces) (= (x-coor piece) 0)))))
+;--------------------------------------------------------------------------;
 
+
+
+
+
+
+;----------------------------FINDING-NETWORKS------------------------------;
 ;Finding Networks and determining if a player has won.
 (define (find-network player goal-area fulladjlist)
-    (if (null? goal-area) (nil) 
-    (let (network (depth-first-search player (car goal-area) (find-adjlist (car goal-area) fulladjlist) fulladjlist '() NO-DIRECTION 0)
-    (if (null? network)
-        (find-network player (cdr goal-area) fulladjlist)
-        (network))))))
-
-;Function thats takes a list of pieces and returns a graph represents the pieces of the specified player
-(define (construct-graph pieces opposite-pieces)
-    (map (lambda (piece) (find-edges piece pieces opposite-pieces nil) pieces))
-
-;Helper function for construct-graph 
-(define (find-edges piece pieces opposite-pieces with-direction) 
-    (if (null? pieces) 
-        (check-blocks piece with-direction opposite-pieces)
-        (let (direction (in-lin-of-sight? piece (car pieces) opposite-pieces) 
-            (if (not (= direction NO-DIRECTION)) (find-edges piece (cdr pieces) opposite-pieces 
-                                                    (insert-sorted (directed-piece direction piece) with-direction))
-                                                 (find-edges piece (cdr pieces) opposite-pieces with-direction))))))
-
-
-;DIRECTED PIECE
-
-;A new piece thats has a direction
-(define (directed-piece direction piece) (cons direction piece))
-
-;Compares two directions
-(define (comp-directed-piece p1 p2) 
-    (cond ((= (direction p1) (direction p2)) 0)
-          ((< (direction p1) (direction p2)) -1)
-          (else 1)))
-
-;Gives the direction of the directed-piece
-(define (direction directed-piece) (car directed-piece)) 
-
-;Checks to see is one piece blocks another in the same direction
-(define check-blocks)
+    (if (null? goal-area) nil
+        (let ((network (depth-first-search player (car goal-area) fulladjlist '() NO-DIRECTION 0)))
+            (if (null? network)
+                (find-network player (cdr goal-area) fulladjlist)
+                network))))
 
 (define (depth-first-search player vertex graph visited direction length-so-far)
     (if (>= length-so-far 5)
@@ -256,8 +282,25 @@
             (reduce dfs-helper (cons nil vertices)))))
 
 ;Helper function for dfs. Finds correct adjacency list.
-(define (find-adjlist pos fulladjlist)
-    (if (= (comp-positions pos (car (car fulladjlist))) 0)
-        (car fulladjlist)
-        (find-adjlist pos (cdr fulladjlist))))
+(define (find-adjlist pos graph)
+    (if (= (comp-positions pos (car (car graph))) 0)
+        (car graph)
+        (find-adjlist pos (cdr graph))))
+
+;Function thats takes a list of pieces and returns a graph represents the pieces of the specified player
+(define (construct-graph pos-lst other-pos-lst)
+    (map (lambda (pos) (cons pos (find-edges pos pos-lst other-pos-lst nil))) pos-lst))
+
+;Helper function for construct-graph 
+(define (find-edges pos pos-lst other-pos-lst with-direction) 
+    (if (null? pos-lst)
+        (check-blocks pos with-direction (build-dir-lst pos other-pos-lst '()))
+        (let ((direction (get-dir pos (car pos-lst))))
+            (if (= direction NO-DIRECTION)
+                (find-edges pos (cdr pos-lst) other-pos-lst with-direction)
+                (find-edges pos (cdr pos-lst) other-pos-lst (insert-sorted with-direction (dir-pos direction (car pos-lst)) comp-dir-pos (lambda (p1 p2) (get-closer pos p1 p2))))))))
+
+;--------------------------------------------------------------------------;
+
+
 

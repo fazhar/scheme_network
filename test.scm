@@ -1,5 +1,18 @@
 (load "network.scm")
 
+;Test construct graph
+(display "TESTING CONSTRUCT GRAPH")
+(newline)
+(define whites (list (position 0 1) (position 1 1) (position 1 5) (position 3 1) (position 3 3) (position 3 5) (position 5 3) (position 7 1)))
+(define blacks (list (position 1 3) (position 2 3) (position 2 5) (position 4 1) (position 5 1) (position 5 5) (position 5 7)))
+(define graph (construct-graph whites blacks))
+(define goal (get-goal-pieces WHITE whites))
+(display (list "graph: " graph))
+(newline)
+(display (list "goal-area: " goal))
+(newline)
+(display (list "find-network test:" (find-network WHITE goal graph)))
+(newline)
 
 ;Test filter
 ;(display (filter (list 1 5 6 4 2 5) (lambda (x) (< 4 x))))
@@ -12,7 +25,11 @@
 					(list (position 5 5) (position 1 1) (position 1 5))
 					(list (position 7 3) (position 5 1) (position 5 5))))
 
-(display (depth-first-search WHITE (position 0 1) graph nil NO-DIRECTION 0))
+(display (list "depth-first-search test: " (depth-first-search WHITE (position 0 1) graph nil NO-DIRECTION 0)))
+
+(newline)
+(newline)
+(display "TESTING IS-VALID?")
 
 ;Tests for is-valid?
 (define blacks (list (position 1 2) (position 3 4) (position 4 4)))
