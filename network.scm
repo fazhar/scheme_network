@@ -242,13 +242,23 @@
                          (filter pieces (lambda (piece) (= (x-coor piece) 0)))))
 
 ;A method for AI to check if a player has won
-(define (has-Won? player game)
-   (let winner 
-        (if (= player BLACK) (find-network player (get-goal-pieces player (black-pieces game)) 
-                                (construct-graph (black-pieces game) (white-pieces game))))
-                             (find-network player (get-goal-pieces player (white-pieces game))
-                                (construct-graph (white-pieces game) (black-pieces game))))
-   (if (null? winner) #f #t))
+(define (has-won? player game)
+    (let ((other-winner
+            (if (and (= (length (black-pieces game)) 10) (= (length (white-pieces game)) 10))
+                (if (= player BLACK) (find-network (other player) (get-goal-pieces player (white-pieces game)) 
+                                        (construct-graph (white-pieces game) (black-pieces game)))
+                                     (find-network (other player) (get-goal-pieces player (black-pieces game))
+                                        (construct-graph (black-pieces game) (white-pieces game))))
+                nil)))
+       (let ((winner
+                (if (= player BLACK) (find-network player (get-goal-pieces player (black-pieces game)) 
+                                        (construct-graph (black-pieces game) (white-pieces game)))
+                                    (find-network player (get-goal-pieces player (white-pieces game))
+                                        (construct-graph (white-pieces game) (black-pieces game))))))
+       (if (null? winner) #f (if (null? other-winner) #t #f)))))
+
+(define (get-user-input player game move-type)
+    nil)
 
 ;--------------------------------------------------------------------------;
 
