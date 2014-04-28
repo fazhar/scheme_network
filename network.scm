@@ -156,6 +156,7 @@
 ;-----------------------------------GAME-----------------------------------;
 
 
+(define (other player) (- 1 player))
 
 ;list of null-spaces
 (define null-space (list (position 0 0) (position 0 7) (position 7 0) (position 7 7)))
@@ -192,7 +193,6 @@
                 ((contains? blacks tile comp-positions) "B ")
                 (else  "+ "))
             (if (= 7 (x-coor tile)) "\n" "")))) (position 0 0))))))
-    
 
 ;Returns whether position is a valid move for color. 
 
