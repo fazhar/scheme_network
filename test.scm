@@ -7,11 +7,15 @@
 (define blacks (list (position 1 3) (position 2 3) (position 2 5) (position 4 1) (position 5 1) (position 5 5) (position 5 7)))
 (define graph (construct-graph whites blacks))
 (define goal (get-goal-pieces WHITE whites))
+(define game1 (game blacks whites))
 (display (list "graph: " graph))
 (newline)
 (display (list "goal-area: " goal))
 (newline)
 (display (list "find-network test:" (find-network WHITE goal graph)))
+(newline)
+(display "Testing has-won?:")
+(display (has-won? WHITE game1))
 (newline)
 
 ;Test filter
