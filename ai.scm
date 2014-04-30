@@ -18,19 +18,46 @@
             (let ((factory (lambda (pos)(make-step-moves-for pos color (get-valid-positions (if (= color BLACK) (game (remove pos blacks) whites)(game blacks (remove pos whites))) color)))))
                 (reduce append (map  factory mypieces)))))))
 
-(define (choose-move game1 color)
-    (let ((moves (find-moves game1 color)))
-        
-    )))
+(define (scored-move score move)
+    (list score move))
 
+(define (score s-move)
+    (car s-move))
+
+(define (move s-move)
+    (cadr s-move))
+
+(define (choose-move game1 player)
+    (move (alpha-beta game1 player -1000 1000 2 1)))
+
+(define (pos-sum graph)
+    (if (null? graph)
+        0
+        (let ((vertex (car (car graph))) (edges (cdr (car graph))))
+            (+ 40 (/ (sum (cons 0 (map (lambda (edge) (distance vertex edge)) edges))) 2) (pos-sum (cdr graph))))))
+    
 (define (heuristic current-game color)
-    0)
+    (let (
+        (graph (construct-graph (pieces-for color current-game)(pieces-for (other color) current-game)))
+        (valid-positions (get-valid-positions current-game color)))
+        (pos-sum graph)))
 
-(define (alpha-beta current-game color myBest opponentBest depth)
-    (let ((moves (find-moves game1 color))
-        (if (= depth 0)
-            (heuristic current-game color)
-            (reduce 
-                (lambda (move)))))))
+
+(define (alpha-beta current-game player my-best opponents-best depth main?)
+    (let ((moves (find-moves current-game player)))
+        (if (zero? depth)
+            (scored-move (- (heuristic current-game player) (heuristic current-game (other player))) nil)
+            (reduce (lambda (best current)
+                (cond 
+                    ((= (score best) 1000) best)
+                    ((>= (score best) opponents-best) best)
+                    (else (let ((new-game (current current-game)))
+                        (if (has-won? player current-game)
+                            (scored-move 1000 current)
+                            (let ((reply (alpha-beta new-game (other player) (- opponents-best) (- (score best)) (- depth 1) (- main?))))
+                                (if (> (- (score reply)) (score best))
+                                    (scored-move (score reply) current)
+                                    best)))))))
+                (cons (scored-move my-best (car moves)) moves)))))
                     
                 
