@@ -4,7 +4,7 @@
 (display "TESTING CONSTRUCT GRAPH")
 (newline)
 (define whites (list (position 0 1) (position 1 1) (position 1 5) (position 3 1) (position 3 3) (position 3 5) (position 5 3) (position 7 1)))
-(define blacks (list (position 1 3) (position 2 3) (position 2 5) (position 4 1) (position 5 1) (position 5 5) (position 5 7)))
+(define blacks (list (position 1 3)))
 (define graph (construct-graph whites blacks))
 (define goal (get-goal-pieces WHITE whites))
 (define game1 (game blacks whites))
