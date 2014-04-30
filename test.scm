@@ -102,3 +102,7 @@
 (display "----------------------------------------------------------------")
 (newline)
 (map (lambda (move) (begin (newline) (display (print-game (move game2))))) (find-moves game2 WHITE))
+(display "----------------------------------------------------------------")
+(newline)
+(display (choose-move game1 BLACK))
+(display "----------------------------------------------------------------")

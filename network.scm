@@ -27,6 +27,8 @@
 
 (define (caddr l) (car (cdr (cdr l))))
 
+(define (sum lst) (reduce + lst))
+
 (define (contains? lst item comp)
     (if (null? lst)
         #f
