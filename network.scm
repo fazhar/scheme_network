@@ -198,7 +198,8 @@
                 (position (+ 1 (x-coor start)) (y-coor start))
                 (position 0 (+ 1 (y-coor start))))))))
 
-(define (print-game game1)
+(define (print-game game1) (print-game-adv game1 nil))
+(define (print-game-adv game1 winning-path)
     (if (null? game1) 
     "Invalid board"
     (let ((whites (white-pieces game1))(blacks (black-pieces game1)))
@@ -208,7 +209,8 @@
             (string-append (if (= 0 (x-coor tile)) (string-append "\t" (number->string (y-coor tile)) " ") "")
             (string-append
             (cond
-                ((contains? null-space tile comp-positions)  "# ")
+                ((contains? winning-path tile comp-positions) "☃")
+                ((contains? null-space tile comp-positions) "# ")
                 ((contains? whites tile comp-positions) "W ")
                 ((contains? blacks tile comp-positions) "B ")
                 (else  "+ "))
@@ -363,11 +365,6 @@
             (get-y))))
 
 ;--------------------------------------------------------------------------;
-
-
-
-
-
 
 ;----------------------------FINDING-NETWORKS------------------------------;
 ;Finding Networks and determining if a player has won.
