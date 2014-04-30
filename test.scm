@@ -12,10 +12,20 @@
 (newline)
 (display (list "goal-area: " goal))
 (newline)
+
+(display "TESTING FIND-NETWORK: ")
+
 (display (list "find-network test:" (find-network WHITE goal graph)))
 (newline)
 (display "Testing has-won?:")
 (display (has-won? WHITE game1))
+(newline)
+
+(display "Testing has-won?. Should be #f: ")
+(display (has-won? WHITE (game (list (position 1 2) (position 3 4) (position 4 4)) (list (position 5 4) (position 2 2) (position 6 6)))))
+(newline)
+(display "Testing has-won?. Should be #f: ")
+(display (has-won? BLACK (game (list (position 1 2) (position 3 4) (position 4 4)) (list (position 5 4) (position 2 2) (position 6 6)))))
 (newline)
 
 ;Test filter

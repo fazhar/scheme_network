@@ -17,6 +17,18 @@
 (define DOWN 6)
 (define DOWN-LEFT 7)
 (define NO-DIRECTION 8)
+
+;Guide for move-types
+(define ADD 10)
+(define STEP 11)
+
+;Guide for player types
+(define HUMAN 15)
+(define AI 13)
+
+;For sanity
+(load "ai.scm")
+
 ;--------------------------------------------------------------------------;
 
 
@@ -135,15 +147,16 @@
 ;Checks to see is one piece blocks another in the same direction
 (define (check-blocks pos pos-lst other-pos-lst)
     (if (null? pos-lst) pos-lst
-        (cond ((< (comp-dir-pos (car pos-lst) (car other-pos-lst)) 0)
-                (cons (get-position (car pos-lst)) (check-blocks pos (cdr pos-lst) other-pos-lst)))
-              ((> (comp-dir-pos (car pos-lst) (car other-pos-lst)) 0)
-                (check-blocks pos pos-lst (cdr other-pos-lst)))
-              ((= (comp-dir-pos (car pos-lst) (car other-pos-lst)) 0)
-                (let ((temp-pos (get-position (get-closer pos (car pos-lst) (car other-pos-lst)))))
-                    (if (= (comp-positions temp-pos (get-position (car other-pos-lst))) 0)
-                        (check-blocks pos (cdr pos-lst) (cdr other-pos-lst))
-                        (cons (get-position (car pos-lst)) (check-blocks pos (cdr pos-lst) (cdr other-pos-lst)))))))))
+        (if (null? other-pos-lst) (map get-position pos-lst)
+            (cond ((< (comp-dir-pos (car pos-lst) (car other-pos-lst)) 0)
+                    (cons (get-position (car pos-lst)) (check-blocks pos (cdr pos-lst) other-pos-lst)))
+                  ((> (comp-dir-pos (car pos-lst) (car other-pos-lst)) 0)
+                    (check-blocks pos pos-lst (cdr other-pos-lst)))
+                  ((= (comp-dir-pos (car pos-lst) (car other-pos-lst)) 0)
+                    (let ((temp-pos (get-position (get-closer pos (car pos-lst) (car other-pos-lst)))))
+                        (if (= (comp-positions temp-pos (get-position (car other-pos-lst))) 0)
+                            (check-blocks pos (cdr pos-lst) (cdr other-pos-lst))
+                            (cons (get-position (car pos-lst)) (check-blocks pos (cdr pos-lst) (cdr other-pos-lst))))))))))
 
 (define (build-dir-lst pos pos-lst new-lst)
     (if (null? pos-lst)
@@ -217,7 +230,7 @@
         (cons 0 pieces))))
 
 (define (count-neighbors pieces position)  
-    (reduce + (map (lambda (piece) (if (neighbors? piece position) 1 0)) pieces)))
+    (reduce + (cons 0 (map (lambda (piece) (if (neighbors? piece position) 1 0)) pieces))))
 
 ;Return a new game board with the step or add move if the move is valid. Otherwise, return nil.
 (define (make-add-move current-game color position)
@@ -245,22 +258,109 @@
 
 ;A method for AI to check if a player has won
 (define (has-won? player game)
-    (let ((other-winner
-            (if (and (= (length (black-pieces game)) 10) (= (length (white-pieces game)) 10))
-                (if (= player BLACK) (find-network (other player) (get-goal-pieces player (white-pieces game)) 
-                                        (construct-graph (white-pieces game) (black-pieces game)))
-                                     (find-network (other player) (get-goal-pieces player (black-pieces game))
-                                        (construct-graph (black-pieces game) (white-pieces game))))
-                nil)))
-       (let ((winner
-                (if (= player BLACK) (find-network player (get-goal-pieces player (black-pieces game)) 
-                                        (construct-graph (black-pieces game) (white-pieces game)))
-                                    (find-network player (get-goal-pieces player (white-pieces game))
-                                        (construct-graph (white-pieces game) (black-pieces game))))))
-       (if (null? winner) #f (if (null? other-winner) #t #f)))))
+    (if (> (length (pieces-for player game)) 5)
+        (let ((other-winner
+                (if (and (= (length (black-pieces game)) 10) (= (length (white-pieces game)) 10))
+                    (if (= player BLACK) (find-network (other player) (get-goal-pieces player (white-pieces game)) 
+                                            (construct-graph (white-pieces game) (black-pieces game)))
+                                         (find-network (other player) (get-goal-pieces player (black-pieces game))
+                                            (construct-graph (black-pieces game) (white-pieces game))))
+                    nil)))
+           (let ((winner
+                    (if (= player BLACK) (find-network player (get-goal-pieces player (black-pieces game)) 
+                                            (construct-graph (black-pieces game) (white-pieces game)))
+                                        (find-network player (get-goal-pieces player (white-pieces game))
+                                            (construct-graph (white-pieces game) (black-pieces game))))))
+           (if (null? winner) #f (if (null? other-winner) #t #f))))
+        #f))
 
-(define (get-user-input player game move-type)
-    nil)
+(define (play-game player1-type player2-type)
+    (begin
+        (display "Welcome to Network!")
+        (newline)
+        (display "Player 1 is black. ")
+        (newline)
+        (display "Player 2 is white. ")
+        (newline)
+        (play-game-helper (game nil nil) BLACK player1-type player2-type)))
+
+
+(define (play-game-helper game1 player player1-type player2-type)
+    (begin 
+        (newline)
+        (display (print-game game1))
+        (newline)
+        (let ((network? (has-won? player game1)))
+            (if network?
+                (display (list player " has won"))
+                (let ((move-type 
+                        (if (= (length (pieces-for player game1)) 10)
+                            STEP
+                            ADD)))
+                    (let ((move 
+                            (if (= player BLACK)
+                                (if (= player1-type AI)
+                                    (choose-move game1 player)
+                                    (get-user-input game1 player move-type))
+                                (if (= player2-type AI)
+                                    (choose-move game1 player)
+                                    (get-user-input game1 player move-type)))))
+                        (let ((new-game (move game1)))
+                            (if (null? new-game)
+                                (begin 
+                                    (display "Invalid move. Try again.")
+                                    (newline)
+                                    (play-game-helper game1 player player1-type player2-type))
+                                (play-game-helper new-game (other player) player1-type player2-type)))))))))
+
+
+(define (get-user-input game1 player move-type)
+    (begin
+        (if (= player BLACK)
+            (display "Black's turn.")
+            (display "White's turn."))
+        (newline)
+        (if (= move-type ADD)
+            (begin
+                (display "Make add-move: ")
+                (newline)
+                (define x (get-x))
+                (define y (get-y))
+                (lambda (old-game) (make-add-move old-game player (position x y))))
+            (begin
+                (display "Make step-move: ")
+                (newline)
+                (display "Move from x-coor: ")
+                (newline)
+                (define x1 (get-x))
+                (display "Move from y-coor: ")
+                (newline)
+                (define y1 (get-y))
+                (display "Add to x-coor: ")
+                (newline)
+                (define x2 (get-x))
+                (display "Add to y-coor: ")
+                (newline)
+                (define y2 (get-y))
+                (lambda (old-game) (make-step-move player (position x1 y1) (position x2 y2)))))))
+
+(define (get-x)
+    (begin
+        (display "Please enter an x-coor between 0 and 7: ")
+        (newline)
+        (define x (read))
+        (if (and (<= x 7) (>= x 0))
+            x
+            (get-x))))
+
+(define (get-y)
+    (begin
+        (display "Please enter an y-coor between 0 and 7: ")
+        (newline)
+        (define y (read))
+        (if (and (<= y 7) (>= y 0))
+            y
+            (get-y))))
 
 ;--------------------------------------------------------------------------;
 
@@ -272,11 +372,11 @@
 ;----------------------------FINDING-NETWORKS------------------------------;
 ;Finding Networks and determining if a player has won.
 (define (find-network player goal-area fulladjlist)
-    (if (null? goal-area) nil
-        (let ((network (depth-first-search player (car goal-area) fulladjlist '() NO-DIRECTION 0)))
-            (if (null? network)
-                (find-network player (cdr goal-area) fulladjlist)
-                network))))
+        (if (null? goal-area) nil
+            (let ((network (depth-first-search player (car goal-area) fulladjlist '() NO-DIRECTION 0)))
+                (if (null? network)
+                    (find-network player (cdr goal-area) fulladjlist)
+                    network))))
 
 (define (depth-first-search player vertex graph visited direction length-so-far)
     (if (>= length-so-far 5)
@@ -313,6 +413,4 @@
                 (find-edges pos (cdr pos-lst) other-pos-lst (insert-sorted with-direction (dir-pos direction (car pos-lst)) comp-dir-pos (lambda (p1 p2) (get-closer pos p1 p2))))))))
 
 ;--------------------------------------------------------------------------;
-
-
 
