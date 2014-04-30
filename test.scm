@@ -114,5 +114,14 @@
 ;(map (lambda (move) (begin (newline) (display (print-game (move game2))))) (find-moves game2 WHITE))
 (display "----------------------------------------------------------------")
 (newline)
+(define game3 
+    (game
+    (list (position 1 1))
+    (list (position 0 3) (position 2 3) (position 3 4) (position 4 4) (position 4 6))
+    ))
 (display ((choose-move (game ()()) BLACK) (game ()())))
+(newline)
 (display "----------------------------------------------------------------")
+(newline)
+(display (print-game ((choose-move game3 BLACK) game3)))
+(newline)
