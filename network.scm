@@ -147,7 +147,8 @@
 ;Checks to see is one piece blocks another in the same direction
 (define (check-blocks pos pos-lst other-pos-lst)
     (if (null? pos-lst) pos-lst
-        (if (null? other-pos-lst) (map get-position pos-lst)
+        (if (null? other-pos-lst) 
+            (map get-position pos-lst)
             (cond ((< (comp-dir-pos (car pos-lst) (car other-pos-lst)) 0)
                     (cons (get-position (car pos-lst)) (check-blocks pos (cdr pos-lst) other-pos-lst)))
                   ((> (comp-dir-pos (car pos-lst) (car other-pos-lst)) 0)
@@ -161,7 +162,10 @@
 (define (build-dir-lst pos pos-lst new-lst)
     (if (null? pos-lst)
         new-lst
-        (build-dir-lst pos (cdr pos-lst) (insert-sorted new-lst (dir-pos (get-dir pos (car pos-lst)) (car pos-lst)) comp-dir-pos (lambda (p1 p2) (get-closer pos p1 p2))))))
+        (build-dir-lst pos (cdr pos-lst) (insert-sorted new-lst 
+                                         (dir-pos (get-dir pos (car pos-lst)) (car pos-lst)) 
+                                          comp-dir-pos 
+                                         (lambda (p1 p2) (get-closer pos p1 p2))))))
 ;--------------------------------------------------------------------------;
 
 
@@ -254,25 +258,20 @@
 
 ;Finding pieces if first goal area
 (define (get-goal-pieces player pieces)
-    (if (= BLACK player) (filter pieces (lambda (piece) (= (y-coor piece) 0)))
-                         (filter pieces (lambda (piece) (= (x-coor piece) 0)))))
+    (filter pieces (lambda (piece) (is-start-goal-piece? piece player))))
 
 ;A method for AI to check if a player has won
 (define (has-won? player game)
     (if (> (length (pieces-for player game)) 5)
         (let ((other-winner
                 (if (and (= (length (black-pieces game)) 10) (= (length (white-pieces game)) 10))
-                    (if (= player BLACK) (find-network (other player) (get-goal-pieces player (white-pieces game)) 
-                                            (construct-graph (white-pieces game) (black-pieces game)))
-                                         (find-network (other player) (get-goal-pieces player (black-pieces game))
-                                            (construct-graph (black-pieces game) (white-pieces game))))
+                    (find-network (other player) (get-goal-pieces player (pieces-for (other player) game)) 
+                                            (construct-graph (pieces-for (other player) game) (pieces-for player game)))
                     nil)))
            (let ((winner
-                    (if (= player BLACK) (find-network player (get-goal-pieces player (black-pieces game)) 
-                                            (construct-graph (black-pieces game) (white-pieces game)))
-                                        (find-network player (get-goal-pieces player (white-pieces game))
-                                            (construct-graph (white-pieces game) (black-pieces game))))))
-           (if (null? winner) #f (if (null? other-winner) #t #f))))
+                    (find-network player (get-goal-pieces player (pieces-for player game)) 
+                                            (construct-graph (pieces-for player game) (pieces-for (other player) game)))))
+                (if (null? winner) #f (if (null? other-winner) #t #f))))
         #f))
 
 (define (play-game player1-type player2-type)
@@ -350,7 +349,7 @@
         (display "Please enter an x-coor between 0 and 7: ")
         (newline)
         (define x (read))
-        (if (and (<= x 7) (>= x 0))
+        (if (and (integer? x) (<= x 7) (>= x 0))
             x
             (get-x))))
 
@@ -359,7 +358,7 @@
         (display "Please enter an y-coor between 0 and 7: ")
         (newline)
         (define y (read))
-        (if (and (<= y 7) (>= y 0))
+        (if (and (integer? y) (<= y 7) (>= y 0))
             y
             (get-y))))
 
