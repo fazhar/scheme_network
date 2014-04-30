@@ -64,5 +64,3 @@
         (if (zero? depth)
             (scored-move  (- (heuristic current-game player) (heuristic current-game (other player))) nil)
             (inner-loop moves (scored-move my-best (car moves))))))
-                    
-                
