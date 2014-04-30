@@ -198,16 +198,17 @@
     (if (null? game1) 
     "Invalid board"
     (let ((whites (white-pieces game1))(blacks (black-pieces game1)))
+    (string-append "\t  0 1 2 3 4 5 6 7\n"
     (reduce string-append (game-map 
         (lambda (tile)
-            (string-append (if (= 0 (x-coor tile)) "\t" "")
+            (string-append (if (= 0 (x-coor tile)) (string-append "\t" (number->string (y-coor tile)) " ") "")
             (string-append
             (cond
                 ((contains? null-space tile comp-positions)  "# ")
                 ((contains? whites tile comp-positions) "W ")
                 ((contains? blacks tile comp-positions) "B ")
                 (else  "+ "))
-            (if (= 7 (x-coor tile)) "\n" "")))) (position 0 0))))))
+            (if (= 7 (x-coor tile)) "\n" "")))) (position 0 0)))))))
 
 ;Returns whether position is a valid move for color. 
 
