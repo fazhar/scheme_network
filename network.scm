@@ -290,28 +290,28 @@
         (newline)
         (display (print-game game1))
         (newline)
-        (let ((network? (has-won? player game1)))
-            (if network?
-                (display (list player " has won"))
-                (let ((move-type 
-                        (if (= (length (pieces-for player game1)) 10)
-                            STEP
-                            ADD)))
-                    (let ((move 
-                            (if (= player BLACK)
-                                (if (= player1-type AI)
-                                    (choose-move game1 player)
-                                    (get-user-input game1 player move-type))
-                                (if (= player2-type AI)
-                                    (choose-move game1 player)
-                                    (get-user-input game1 player move-type)))))
-                        (let ((new-game (move game1)))
-                            (if (null? new-game)
-                                (begin 
-                                    (display "Invalid move. Try again.")
-                                    (newline)
-                                    (play-game-helper game1 player player1-type player2-type))
-                                (play-game-helper new-game (other player) player1-type player2-type)))))))))
+        (let ((move-type 
+                (if (= (length (pieces-for player game1)) 10)
+                    STEP
+                    ADD)))
+            (let ((move 
+                    (if (= player BLACK)
+                        (if (= player1-type AI)
+                            (choose-move game1 player)
+                            (get-user-input game1 player move-type))
+                        (if (= player2-type AI)
+                            (choose-move game1 player)
+                            (get-user-input game1 player move-type)))))
+                (let ((new-game (move game1)))
+                    (if (null? new-game)
+                        (begin 
+                            (display "Invalid move. Try again.")
+                            (newline)
+                            (play-game-helper game1 player player1-type player2-type))
+                        (if (has-won? player new-game)
+                            (if (= player BLACK) "Black has won"
+                                                 "White has won")
+                            (play-game-helper new-game (other player) player1-type player2-type))))))))
 
 
 (define (get-user-input game1 player move-type)
