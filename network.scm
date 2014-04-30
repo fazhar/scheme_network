@@ -270,7 +270,7 @@
            (let ((winner
                     (find-network player (get-goal-pieces player (pieces-for player game)) 
                                             (construct-graph (pieces-for player game) (pieces-for (other player) game)))))
-                (if (null? winner) #f (if (null? other-winner) #t #f))))
+                (if (null? winner) #f (if (null? other-winner) winner #f))))
         #f))
 
 (define (play-game player1-type player2-type)
@@ -307,11 +307,13 @@
                             (display "Invalid move. Try again.")
                             (newline)
                             (play-game-helper game1 player player1-type player2-type))
-                        (if (has-won? player new-game)
-                            (if (= player BLACK) "Black has won"
-                                                 "White has won")
-                            (play-game-helper new-game (other player) player1-type player2-type))))))))
-
+                        (let ((network (has-won? player new-game)))
+                            (if (null? network)
+                                (play-game-helper new-game (other player) player1-type player2-type)
+                                (begin  (display (print-game-adv new-game network))
+                                        (newline)
+                                        (if (= player BLACK) "Black has won"
+                                                             "White has won"))))))))))
 
 (define (get-user-input game1 player move-type)
     (begin

@@ -119,9 +119,20 @@
     (list (position 1 1))
     (list (position 0 3) (position 2 3) (position 3 4) (position 4 4) (position 4 6))
     ))
-(display ((choose-move (game ()()) BLACK) (game ()())))
+; (display ((choose-move (game ()()) BLACK) (game ()())))
+; (newline)
+; (display "----------------------------------------------------------------")
+; (newline)
+; (display (print-game ((choose-move game3 BLACK) game3)))
+; (newline)
+
+(define game2
+    (game
+    (list (position 1 1) (position 1 4) (position 2 1) (position 4 1) (position 4 4) (position 4 7) (position 6 5))
+    (list (position 2 2) (position 5 2) (position 2 5) (position 5 5) (position 7 5) (position 0 5) (position 3 1))))
+
+(display (print-game game2))
 (newline)
-(display "----------------------------------------------------------------")
+(display (construct-graph (white-pieces game2) (black-pieces game2)))
 (newline)
-(display (print-game ((choose-move game3 BLACK) game3)))
-(newline)
+(display (has-won? WHITE game2))
