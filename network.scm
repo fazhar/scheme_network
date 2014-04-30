@@ -17,6 +17,14 @@
 (define DOWN 6)
 (define DOWN-LEFT 7)
 (define NO-DIRECTION 8)
+
+;Guide for move-types
+(define ADD 10)
+(define STEP 11)
+
+;Guide for player types
+(define HUMAN 15)
+(define AI 13)
 ;--------------------------------------------------------------------------;
 
 
@@ -257,8 +265,89 @@
                                         (construct-graph (white-pieces game) (black-pieces game))))))
        (if (null? winner) #f (if (null? other-winner) #t #f)))))
 
-(define (get-user-input player game move-type)
-    nil)
+(define (play-game player1-type player2-type)
+    (begin
+        (display "Welcome to Network!")
+        (newline)
+        (display "Player 1 is black. ")
+        (newline)
+        (display "Player 2 is white. ")
+        (newline)
+        (play-game-helper (game nil nil) player player1-type player2-type)))
+
+
+(define (play-game-helper game1 player player1-type player2-type)
+    (begin 
+        (display (print-game game1))
+        (newline)
+        (let ((network (find-network player (get-goal-pieces player (pieces-for player game1)) 
+                            (construct-graph (pieces-for player game1) (pieces-for (other player) game1)))))
+            (if (not (null? network))
+                network
+                (let ((move-type 
+                        (if (= (length (pieces-for player game1)) 10)
+                            STEP
+                            ADD)))
+                    (let ((move 
+                            (if (= player BLACK)
+                                (if (= player1-type AI)
+                                    (choose-move game1 player)
+                                    (get-user-input game1 player move-type))
+                                (if (= player2-type AI)
+                                    (choose-move game1 player)
+                                    (get-user-input game1 player move-type)))))
+                        (let ((new-game (move game1)))
+                            (if (null? new-game)
+                                (begin 
+                                    (display "Invalid move. Try again.")
+                                    (newline)
+                                    (play-game-helper game1 player player1-type player2-type))
+                                (play-game-helper new-game (other player) player1-type player2-type)))))))))
+
+
+(define (get-user-input game1 player move-type)
+    (begin
+        (if (= move-type ADD)
+            (begin
+                (display "Make add-move: ")
+                (newline)
+                (define x (get-x))
+                (define y (get-y))
+                (lambda (old-game) (make-add-move old-game player (position x y))))
+            (begin
+                (display "Make step-move: ")
+                (newline)
+                (display "Move from x-coor: ")
+                (newline)
+                (define x1 (get-x))
+                (display "Move from y-coor: ")
+                (newline)
+                (define y1 (get-y))
+                (display "Add to x-coor: ")
+                (newline)
+                (define x2 (get-x))
+                (display "Add to y-coor: ")
+                (newline)
+                (define y2 (get-y))
+                (lambda (old-game) (make-step-move player (position x1 y1) (position x2 y2)))))))
+
+(define (get-x)
+    (begin
+        (display "Please enter an x-coor between 0 and 7: ")
+        (newline)
+        (define x (read))
+        (if (and (< x 7) (> x 0))
+            x
+            (get-x))))
+
+(define (get-y)
+    (begin
+        (display "Please enter an y-coor between 0 and 7: ")
+        (newline)
+        (define y (read))
+        (if (and (< y 7) (> y 0))
+            y
+            (get-y))))
 
 ;--------------------------------------------------------------------------;
 
