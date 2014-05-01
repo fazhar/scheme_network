@@ -93,6 +93,14 @@
         (= 0 (y-coor position))
         (= 0 (x-coor position))))
 
+(define (is-end-goal-piece? position color)
+    (if (= color BLACK)
+        (= 7 (y-coor position))
+        (= 7 (x-coor position))))
+
+(define (is-goal-piece? player position)
+    (or (is-start-goal-piece? position player) (is-end-goal-piece? position player)))
+
 ;Finds the distance between between two positions
 (define (distance p1 p2) (+ (abs (delta-x p1 p2)) (abs (delta-y p1 p2))))
 
@@ -209,7 +217,7 @@
             (string-append (if (= 0 (x-coor tile)) (string-append "\t" (number->string (y-coor tile)) " ") "")
             (string-append
             (cond
-                ((contains? winning-path tile comp-positions) "☃")
+                ((contains? winning-path tile comp-positions) "☃ ")
                 ((contains? null-space tile comp-positions) "# ")
                 ((contains? whites tile comp-positions) "W ")
                 ((contains? blacks tile comp-positions) "B ")
@@ -268,13 +276,17 @@
         (let ((other-winner
                 (if (and (= (length (black-pieces game)) 10) (= (length (white-pieces game)) 10))
                     (find-network (other player) (get-goal-pieces player (pieces-for (other player) game)) 
-                                            (construct-graph (pieces-for (other player) game) (pieces-for player game)))
+                                            (construct-graph player (pieces-for (other player) game) (pieces-for player game)))
                     nil)))
            (let ((winner
                     (find-network player (get-goal-pieces player (pieces-for player game)) 
-                                            (construct-graph (pieces-for player game) (pieces-for (other player) game)))))
-                (if (null? winner) #f (if (null? other-winner) winner #f))))
-        #f))
+                                            (construct-graph player (pieces-for player game) (pieces-for (other player) game)))))
+                (if (null? winner) 
+                    nil
+                    (if (null? other-winner) 
+                        winner 
+                        nil))))
+        nil))
 
 (define (play-game player1-type player2-type)
     (begin
@@ -399,17 +411,18 @@
         (find-adjlist pos (cdr graph))))
 
 ;Function thats takes a list of pieces and returns a graph represents the pieces of the specified player
-(define (construct-graph pos-lst other-pos-lst)
-    (map (lambda (pos) (cons pos (find-edges pos pos-lst other-pos-lst nil))) pos-lst))
+(define (construct-graph player pos-lst other-pos-lst)
+    (map (lambda (pos) (cons pos (find-edges player pos pos-lst other-pos-lst nil))) pos-lst))
 
 ;Helper function for construct-graph 
-(define (find-edges pos pos-lst other-pos-lst with-direction) 
+(define (find-edges player pos pos-lst other-pos-lst with-direction) 
     (if (null? pos-lst)
         (check-blocks pos with-direction (build-dir-lst pos other-pos-lst '()))
         (let ((direction (get-dir pos (car pos-lst))))
-            (if (= direction NO-DIRECTION)
-                (find-edges pos (cdr pos-lst) other-pos-lst with-direction)
-                (find-edges pos (cdr pos-lst) other-pos-lst (insert-sorted with-direction (dir-pos direction (car pos-lst)) comp-dir-pos (lambda (p1 p2) (get-closer pos p1 p2))))))))
+            (if (or (= direction NO-DIRECTION) 
+                    (and (is-goal-piece? player pos) (is-goal-piece? player (car pos-lst))))
+                (find-edges player pos (cdr pos-lst) other-pos-lst with-direction)
+                (find-edges player pos (cdr pos-lst) other-pos-lst (insert-sorted with-direction (dir-pos direction (car pos-lst)) comp-dir-pos (lambda (p1 p2) (get-closer pos p1 p2))))))))
 
 ;--------------------------------------------------------------------------;
 

@@ -5,7 +5,7 @@
 (newline)
 (define whites (list (position 0 1) (position 1 1) (position 1 5) (position 3 1) (position 3 3) (position 3 5) (position 5 3) (position 7 1)))
 (define blacks (list (position 1 3)))
-(define graph (construct-graph whites blacks))
+(define graph (construct-graph WHITE whites blacks))
 (define goal (get-goal-pieces WHITE whites))
 (define game1 (game blacks whites))
 (display (list "graph: " graph))
@@ -21,10 +21,10 @@
 (display (has-won? WHITE game1))
 (newline)
 
-(display "Testing has-won?. Should be #f: ")
+(display "Testing has-won?. Should be (): ")
 (display (has-won? WHITE (game (list (position 1 2) (position 3 4) (position 4 4)) (list (position 5 4) (position 2 2) (position 6 6)))))
 (newline)
-(display "Testing has-won?. Should be #f: ")
+(display "Testing has-won?. Should be (): ")
 (display (has-won? BLACK (game (list (position 1 2) (position 3 4) (position 4 4)) (list (position 5 4) (position 2 2) (position 6 6)))))
 (newline)
 
@@ -107,11 +107,11 @@
 (display (print-game game2))
 (newline)
 (newline)
-;(map (lambda (move) (begin (newline) (display (print-game (move game2))))) (find-moves game2 BLACK))
+(map (lambda (move) (begin (newline) (display (print-game (move game2))))) (find-moves game2 BLACK))
 (newline)
 (display "----------------------------------------------------------------")
 (newline)
-;(map (lambda (move) (begin (newline) (display (print-game (move game2))))) (find-moves game2 WHITE))
+(map (lambda (move) (begin (newline) (display (print-game (move game2))))) (find-moves game2 WHITE))
 (display "----------------------------------------------------------------")
 (newline)
 (define game3 
@@ -119,20 +119,34 @@
     (list (position 1 1))
     (list (position 0 3) (position 2 3) (position 3 4) (position 4 4) (position 4 6))
     ))
-; (display ((choose-move (game ()()) BLACK) (game ()())))
-; (newline)
-; (display "----------------------------------------------------------------")
-; (newline)
-; (display (print-game ((choose-move game3 BLACK) game3)))
-; (newline)
+(display ((choose-move (game ()()) BLACK) (game ()())))
+(newline)
+(display "----------------------------------------------------------------")
+(newline)
+(display (print-game ((choose-move game3 BLACK) game3)))
+(newline)
 
 (define game2
     (game
     (list (position 1 1) (position 1 4) (position 2 1) (position 4 1) (position 4 4) (position 4 7) (position 6 5))
     (list (position 2 2) (position 5 2) (position 2 5) (position 5 5) (position 7 5) (position 0 5) (position 3 1))))
 
-(display (print-game game2))
+(display (print-game-adv game2 (has-won? WHITE game2)))
+
+
+
+(define game2
+    (game
+    (list (position 1 1) (position 1 5) (position 2 7) (position 2 0) (position 2 5) (position 4 2) (position 4 7))
+    (list (position 0 4) (position 2 2) (position 3 1) (position 5 1) (position 5 2) (position 7 4))))
+
 (newline)
-(display (construct-graph (white-pieces game2) (black-pieces game2)))
+(display (construct-graph BLACK (black-pieces game2) (white-pieces game2)))
 (newline)
-(display (has-won? WHITE game2))
+(display (print-game-adv game2 (has-won? BLACK game2)))
+
+
+
+
+
+

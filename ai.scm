@@ -15,8 +15,8 @@
     (let ((my-pieces (pieces-for color current-game)) (other-pieces (pieces-for (other color) current-game))) 
         (if (> 10 (length my-pieces))
             (map (lambda (pos) (add-move pos color)) (get-valid-positions current-game color))
-            (let ((factory (lambda (pos)(make-step-moves-for pos color (get-valid-positions (if (= color BLACK) (game (remove pos my-pieces) other-pieces)(game other-pieces (remove pos my-piece))) color)))))
-                (reduce append (map  factory mypieces))))))
+            (let ((factory (lambda (pos)(make-step-moves-for pos color (get-valid-positions (if (= color BLACK) (game (remove pos my-pieces) other-pieces)(game other-pieces (remove pos my-pieces))) color)))))
+                (reduce append (map  factory my-pieces))))))
 
 (define (scored-move score move)
     (list score move))
@@ -29,9 +29,7 @@
 
 (define (choose-move game1 player)
     (let ((choice (alpha-beta game1 player -1000 1000 2)))
-        (begin
-            (display (score choice))
-            (move choice))))
+        (move choice)))
 
 (define (pos-sum graph)
     (if (null? graph)
@@ -41,7 +39,7 @@
     
 (define (heuristic current-game color)
     (let (
-        (graph (construct-graph (pieces-for color current-game)(pieces-for (other color) current-game)))
+        (graph (construct-graph color (pieces-for color current-game)(pieces-for (other color) current-game)))
         (valid-positions (get-valid-positions current-game color)))
         (+ (pos-sum graph) (length valid-positions))))
 
@@ -51,7 +49,7 @@
             (if (null? move-set)
                 best
                 (let ((new-game ((car move-set) current-game)))
-                    (if (has-won? player new-game)
+                    (if (not (null? (has-won? player new-game)))
                         (scored-move 1000 (car move-set))
                         (if (>= (score best) opponents-best)
                             best
